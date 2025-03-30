@@ -5,30 +5,36 @@ from django.conf import settings
 
 from .models import Event, Booking, Waitlist
 from .serializers import EventSerializer, BookingSerializer, WaitlistSerializer
+from users.permissions import IsAdmin, IsOrganizer
 
-
-class EventListCreateView(generics.ListCreateAPIView):
+class CreateEventView(generics.CreateAPIView):
+    """Only Admins & Organizers can create events."""
     queryset = Event.objects.all()
     serializer_class = EventSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOrganizer | IsAdmin]
 
     def perform_create(self, serializer):
         serializer.save(organizer=self.request.user)
 
-class EventDetailView(generics.RetrieveUpdateDestroyAPIView):
+class UpdateEventView(generics.UpdateAPIView):
+    """Only the event organizer can update their own event."""
     queryset = Event.objects.all()
     serializer_class = EventSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOrganizer]
 
-    def get_queryset(self):
-        # Admin can see all users
-        if self.request.user.is_staff:  
-            return Event.objects.all()
-        # enable organizers manage their own events
-        return Event.objects.filter(organizer=self.request.user) 
+class DeleteEventView(generics.DestroyAPIView):
+    """Only Admin can delete events."""
+    queryset = Event.objects.all()
+    permission_classes = [permissions.IsAuthenticated, IsAdmin]
 
+class ListEventsView(generics.ListAPIView):
+    """Anyone can view events."""
+    queryset = Event.objects.all()
+    serializer_class = EventSerializer
+    permission_classes = [permissions.AllowAny]
 
 class BookEventView(generics.CreateAPIView):
+    """Authenticated users can book an event."""
     serializer_class = BookingSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -52,6 +58,7 @@ class BookEventView(generics.CreateAPIView):
             return Response({"error": "Event is fully booked."}, status=status.HTTP_400_BAD_REQUEST)
 
 class CancelBookingView(generics.DestroyAPIView):
+    """Authenticated users can cancel their booking."""
     permission_classes = [permissions.IsAuthenticated]
 
     def delete(self, request, *args, **kwargs):
@@ -62,7 +69,7 @@ class CancelBookingView(generics.DestroyAPIView):
         if booking:
             booking.delete()
 
-            # notifying first user in the waiting list
+            # Notifying first user in the waiting list
             first_waitlisted = Waitlist.objects.filter(event_id=event_id).order_by('joined_at').first()
             if first_waitlisted:
                 first_waitlisted_user = first_waitlisted.user
@@ -80,6 +87,7 @@ class CancelBookingView(generics.DestroyAPIView):
         return Response({"error": "No booking found."}, status=status.HTTP_400_BAD_REQUEST)
 
 class JoinWaitlistView(generics.CreateAPIView):
+    """Authenticated users can join the waitlist if an event is full."""
     serializer_class = WaitlistSerializer
     permission_classes = [permissions.IsAuthenticated]
 

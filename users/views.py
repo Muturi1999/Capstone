@@ -10,6 +10,29 @@ from .models import CustomUser
 from .serializers import UserRegisterSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework import generics, permissions
+from django.contrib.auth import get_user_model
+from users.permissions import IsAdmin
+from users.serializers import UserSerializer
+
+User = get_user_model()
+
+# admin to assign roles
+class AssignRoleView(generics.UpdateAPIView):
+    """Admin can assign user roles."""
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated, IsAdmin]
+
+    def update(self, request, *args, **kwargs):
+        user = self.get_object()
+        new_role = request.data.get('role', None)
+
+        if new_role and new_role in ['admin', 'organizer', 'attendee']:
+            user.role = new_role
+            user.save()
+            return Response({"message": f"Role updated to {new_role}"})
+        return Response({"error": "Invalid role"}, status=400)
 
 # registration endpoint
 class RegisterUser(APIView):
