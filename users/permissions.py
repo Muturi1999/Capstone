@@ -11,7 +11,8 @@ class IsOrganizer(BasePermission):
         return request.user.is_authenticated and request.user.is_organizer()
 
     def has_object_permission(self, request, view, obj):
-        return obj.organizer == request.user  # Only event creator can modify
+        # Enforced only event organizer can modify
+        return obj.organizer == request.user  
 
 class IsAttendee(BasePermission):
     """Allows only Attendees to book events."""

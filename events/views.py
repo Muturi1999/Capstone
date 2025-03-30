@@ -1,8 +1,9 @@
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status, filters
 from rest_framework.response import Response
 from django.core.mail import send_mail
 from django.conf import settings
-
+from django_filters.rest_framework import DjangoFilterBackend
+from .pagination import EventPagination
 from .models import Event, Booking, Waitlist
 from .serializers import EventSerializer, BookingSerializer, WaitlistSerializer
 from users.permissions import IsAdmin, IsOrganizer
@@ -14,6 +15,7 @@ class CreateEventView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated, IsOrganizer | IsAdmin]
 
     def perform_create(self, serializer):
+        # setting organizer
         serializer.save(organizer=self.request.user)
 
 class UpdateEventView(generics.UpdateAPIView):
@@ -94,3 +96,17 @@ class JoinWaitlistView(generics.CreateAPIView):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
         return Response({"message": "You have been added to the waitlist."}, status=status.HTTP_201_CREATED)
+    
+# filtering event api
+class ListEventsView(generics.ListAPIView):
+    """List all events with filtering and pagination."""
+    queryset = Event.objects.all().order_by('date_time')
+    serializer_class = EventSerializer
+    pagination_class = EventPagination
+
+    # Enable filtering and search
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+     # Filtering by location & category
+    filterset_fields = ['location', 'category'] 
+     #Searching by title & description
+    search_fields = ['title', 'description'] 
