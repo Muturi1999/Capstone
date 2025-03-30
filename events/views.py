@@ -7,6 +7,8 @@ from .pagination import EventPagination
 from .models import Event, Booking, Waitlist
 from .serializers import EventSerializer, BookingSerializer, WaitlistSerializer
 from users.permissions import IsAdmin, IsOrganizer
+from .serializers import FeedbackSerializer
+
 
 class CreateEventView(generics.CreateAPIView):
     """Only Admins & Organizers can create events."""
@@ -110,3 +112,12 @@ class ListEventsView(generics.ListAPIView):
     filterset_fields = ['location', 'category'] 
      #Searching by title & description
     search_fields = ['title', 'description'] 
+
+
+class FeedbackCreateView(generics.CreateAPIView):
+    """Allows users to leave feedback for events."""
+    serializer_class = FeedbackSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)

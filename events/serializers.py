@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Event, Booking, Waitlist
+from .models import Event, Booking, Waitlist, Feedback
 
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
@@ -47,3 +47,9 @@ class WaitlistSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("You are already on the waitlist for this event.")
 
         return data
+
+class FeedbackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Feedback
+        fields = ['id', 'user', 'event', 'rating', 'comment', 'created_at']
+        read_only_fields = ['user']

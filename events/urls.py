@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import EventListCreateView, EventDetailView
 from .views import BookEventView, CancelBookingView, JoinWaitlistView
-from .views import ListEventsView
+from .views import ListEventsView, FeedbackCreateView
 
 
 urlpatterns = [
@@ -15,5 +15,9 @@ urlpatterns = [
 
     # filtering api View
     path('events/', ListEventsView.as_view(), name='list-events'),
+
+    # feedback apiview url
+    path('events/<int:event_id>/feedback/', FeedbackCreateView.as_view(), name='event-feedback'),
+
 
 ]
