@@ -5,24 +5,27 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import status
+from rest_framework import status, generics, permissions
+from django.contrib.auth import get_user_model
 from .models import CustomUser
 from .serializers import UserRegisterSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework import generics, permissions
-from django.contrib.auth import get_user_model
-from users.permissions import IsAdmin
-from users.serializers import UserSerializer
+from .permissions import IsAdmin
+from rest_framework_simplejwt import views as jwt_views
+
 
 User = get_user_model()
 
-# admin to assign roles
+# Admin to assign roles
 class AssignRoleView(generics.UpdateAPIView):
     """Admin can assign user roles."""
     queryset = User.objects.all()
-    serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated, IsAdmin]
+
+    def get_serializer_class(self):
+        from .serializers import UserSerializer
+        return UserSerializer
 
     def update(self, request, *args, **kwargs):
         user = self.get_object()
@@ -34,7 +37,7 @@ class AssignRoleView(generics.UpdateAPIView):
             return Response({"message": f"Role updated to {new_role}"})
         return Response({"error": "Invalid role"}, status=400)
 
-# registration endpoint
+# Registration endpoint
 class RegisterUser(APIView):
     def post(self, request):
         serializer = UserRegisterSerializer(data=request.data)
@@ -42,7 +45,7 @@ class RegisterUser(APIView):
             user = serializer.save()
             token = RefreshToken.for_user(user).access_token
 
-            # email verification URL
+            # Email verification URL
             verification_url = request.build_absolute_uri(
                 reverse('verify-email') + f"?token={str(token)}"
             )
@@ -74,7 +77,6 @@ class VerifyEmail(APIView):
         except CustomUser.DoesNotExist:
             return Response({"error": "Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST)
 
-
 # Login with JWT
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -85,4 +87,3 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
-
