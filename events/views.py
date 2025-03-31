@@ -8,6 +8,14 @@ from .models import Event, Booking, Waitlist
 from .serializers import EventSerializer, BookingSerializer, WaitlistSerializer
 from users.permissions import IsAdmin, IsOrganizer
 from .serializers import FeedbackSerializer
+from django.db import models
+from django.contrib.auth.models import User
+from django.utils.timezone import now, timedelta
+from .google_calendar import add_event_to_google_calendar
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
+
+
 
 
 class CreateEventView(generics.CreateAPIView):
@@ -121,3 +129,32 @@ class FeedbackCreateView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+# reccuring events
+class Event(models.Model):
+    RECURRING_CHOICES = [
+        ('none', 'No Recurrence'),
+        ('weekly', 'Weekly'),
+        ('monthly', 'Monthly'),
+    ]
+
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    date_time = models.DateTimeField()
+    location = models.CharField(max_length=255)
+    organizer = models.ForeignKey(User, on_delete=models.CASCADE)
+    capacity = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    recurring = models.CharField(max_length=10, choices=RECURRING_CHOICES, default='none')
+
+    def __str__(self):
+        return f"{self.title} ({self.get_recurring_display()})"
+
+class SyncEventToGoogleView(APIView):
+    """Manually sync an event to Google Calendar."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, event_id):
+        event = Event.objects.get(id=event_id)
+        event_link = add_event_to_google_calendar(event)
+        return Response({"message": "Event synced!", "calendar_link": event_link})
