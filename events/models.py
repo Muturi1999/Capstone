@@ -9,6 +9,7 @@ class Event(models.Model):
         ('monthly', 'Monthly'),
     ]
 
+    category = models.CharField(max_length=100, null=True, blank=True)
     title = models.CharField(max_length=255)
     description = models.TextField()
     date_time = models.DateTimeField()

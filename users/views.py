@@ -8,11 +8,21 @@ from rest_framework.views import APIView
 from rest_framework import status, generics, permissions
 from django.contrib.auth import get_user_model
 from .models import CustomUser
-from .serializers import UserRegisterSerializer
+# from .serializers import UserRegisterSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .permissions import IsAdmin
 from rest_framework_simplejwt import views as jwt_views
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
+from rest_framework import serializers
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .serializers import RegisterSerializer
+from django.utils.http import urlsafe_base64_decode
+from django.contrib.auth.tokens import default_token_generator
 
 
 User = get_user_model()
@@ -37,53 +47,48 @@ class AssignRoleView(generics.UpdateAPIView):
             return Response({"message": f"Role updated to {new_role}"})
         return Response({"error": "Invalid role"}, status=400)
 
-# Registration endpoint
-class RegisterUser(APIView):
+
+class RegisterUserView(APIView):
     def post(self, request):
-        serializer = UserRegisterSerializer(data=request.data)
+        serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
-            token = RefreshToken.for_user(user).access_token
-
-            # Email verification URL
-            verification_url = request.build_absolute_uri(
-                reverse('verify-email') + f"?token={str(token)}"
-            )
-
-            # Sending email
-            send_mail(
-                subject="Verify your email",
-                message=f"Click here to verify your email: {verification_url}",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[user.email],
-            )
-
-            return Response({"message": "Check your email to verify your account"}, status=status.HTTP_201_CREATED)
-
+            serializer.save()
+            return Response({"message": "User registered successfully. Check your email for verification."}, 
+                            status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# Email Verification Endpoint
-class VerifyEmail(APIView):
-    def get(self, request):
-        token = request.GET.get('token')
-
+class VerifyEmailView(APIView):
+    def get(self, request, uid, token):
         try:
-            user = CustomUser.objects.get(auth_token=token)
-            user.is_active = True
-            user.is_verified = True
-            user.save()
-            return Response({"message": "Email verified, you can now login."}, status=status.HTTP_200_OK)
+            uid = urlsafe_base64_decode(uid).decode()
+            user = User.objects.get(pk=uid)
 
-        except CustomUser.DoesNotExist:
-            return Response({"error": "Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST)
+            if default_token_generator.check_token(user, token):
+                user.is_active = True
+                user.save()
+                return Response({"message": "Email verified successfully!"}, status=status.HTTP_200_OK)
 
-# Login with JWT
-class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
-        token['is_verified'] = user.is_verified  
-        return token
+            return Response({"error": "Invalid or expired token."}, status=status.HTTP_400_BAD_REQUEST)
+        except (User.DoesNotExist, ValueError):
+            return Response({"error": "Invalid token."}, status=status.HTTP_400_BAD_REQUEST)
+
+# custom jwt for swagger
+class TokenObtainPairResponseSerializer(serializers.Serializer):
+    access = serializers.CharField()
+    refresh = serializers.CharField()
 
 class CustomTokenObtainPairView(TokenObtainPairView):
-    serializer_class = CustomTokenObtainPairSerializer
+    @swagger_auto_schema(
+        request_body=TokenObtainPairSerializer,
+        responses={200: TokenObtainPairResponseSerializer},
+    )
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+
+class CustomTokenRefreshView(TokenRefreshView):
+    @swagger_auto_schema(
+        request_body=TokenRefreshSerializer,
+        responses={200: TokenObtainPairResponseSerializer},
+    )
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)

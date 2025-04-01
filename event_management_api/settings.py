@@ -35,6 +35,15 @@ ALLOWED_HOSTS = []
 # custome user
 AUTH_USER_MODEL = 'users.CustomUser'
 
+# Email backend
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"  # Or your email provider
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = "mikemuturi018@gmail.com"
+EMAIL_HOST_PASSWORD = "bwtu tywa oubn govc"
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # Application definition
 
@@ -53,12 +62,43 @@ INSTALLED_APPS = [
     'users',
     'events',
     'pytest',
+    'django_extensions',
 ]
 
 REST_FRAMEWORK = {
+
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+    'rest_framework_simplejwt.authentication.JWTAuthentication',
+    'rest_framework.authentication.SessionAuthentication',
+    ),
+
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
     'DEFAULT_PAGINATION_CLASS': 'events.pagination.EventPagination',
+    # "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+
 }
+# SPECTACULAR_SETTINGS = {
+#     "TITLE": "Collections Project API",
+#     "DESCRIPTION": "Api endpoint distribution",
+#     "VERSION": "1.0.0",
+#     "SERVE_INCLUDE_SCHEMA": False,
+#     "SWAGGER_UI_DIST": "SIDECAR", 
+#     "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
+#     "REDOC_DIST": "SIDECAR",
+#     # OTHER SETTINGS
+# }
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+        },
+    },
+    'USE_SESSION_AUTH': False,
+}
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

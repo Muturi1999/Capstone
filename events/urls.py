@@ -6,19 +6,20 @@ from .views import (
 )
 
 urlpatterns = [
-    path('events/', EventListCreateView.as_view(), name='event-list-create'),
-    path('events/<int:pk>/', EventDetailView.as_view(), name='event-detail'),
+    path('', EventListCreateView.as_view(), name='event-list-create'),
+    path('<int:pk>/', EventDetailView.as_view(), name='event-detail'),
 
     # Booking & Waitlist URLs
-    path('events/<int:event_id>/book/', BookEventView.as_view(), name='book-event'),
-    path('events/<int:event_id>/cancel-booking/', CancelBookingView.as_view(), name='cancel-booking'),
-    path('events/<int:event_id>/join-waitlist/', JoinWaitlistView.as_view(), name='join-waitlist'),
+    path('<int:event_id>/book/', BookEventView.as_view(), name='book-event'),
+    path('<int:event_id>/cancel-booking/', CancelBookingView.as_view(), name='cancel-booking'),
+    path('<int:event_id>/join-waitlist/', JoinWaitlistView.as_view(), name='join-waitlist'),
 
-    # filtering api View
-    path('events/', ListEventsView.as_view(), name='list-events'),
-    # feedback apiview url
-    path('events/<int:event_id>/feedback/', FeedbackCreateView.as_view(), name='event-feedback'),
+    # Filtering API View
+    path('list/', ListEventsView.as_view(), name='list-events'),
 
-    # syncing google calender 
-    path('events/<int:event_id>/sync/', SyncEventToGoogleView.as_view(), name='sync-to-google'),
+    # Feedback API View
+    path('<int:event_id>/feedback/', FeedbackCreateView.as_view(), name='event-feedback'),
+
+    # Syncing Google Calendar
+    path('<int:event_id>/sync/', SyncEventToGoogleView.as_view(), name='sync-to-google'),
 ]
