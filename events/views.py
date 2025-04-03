@@ -10,6 +10,22 @@ from users.permissions import IsAdmin, IsOrganizer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from .google_calendar import add_event_to_google_calendar
+import io
+import qrcode
+from django.core.mail import EmailMessage
+from reportlab.pdfgen import canvas
+from django.http import HttpResponse
+import io
+import qrcode
+from PIL import Image
+from django.core.mail import EmailMessage
+from django.conf import settings
+from rest_framework.response import Response
+from rest_framework import status, permissions, generics
+from reportlab.pdfgen import canvas
+from .models import Event, Booking
+
+
 
 
 class EventListCreateView(generics.ListCreateAPIView):
@@ -29,7 +45,7 @@ class EventDetailView(generics.RetrieveAPIView):
     """Retrieve a single event by ID."""
     queryset = Event.objects.all()
     serializer_class = EventSerializer
-    lookup_field = 'id'
+    lookup_field = 'title'
 
 class UpdateEventView(generics.UpdateAPIView):
     """Only the event organizer can update their own event."""
@@ -43,9 +59,8 @@ class DeleteEventView(generics.DestroyAPIView):
     queryset = Event.objects.all()
     permission_classes = [permissions.IsAuthenticated, IsAdmin]
 
-
 class BookEventView(generics.CreateAPIView):
-    """Authenticated users can book an event."""
+    """Authenticated users can book an event and receive a PDF confirmation with a QR code."""
     serializer_class = BookingSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -56,19 +71,48 @@ class BookEventView(generics.CreateAPIView):
         if event.bookings.count() < event.capacity:
             booking = Booking.objects.create(user=request.user, event=event)
 
-            # Sending confirmation email
-            send_mail(
-                subject=f"Booking Confirmed: {event.title}",
-                message=f"You have successfully booked {event.title} on {event.date_time}.",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[request.user.email],
-            )
+            # Generate QR code with booking details
+            qr_data = f"Booking ID: {booking.id}, Event: {event.title}, User: {request.user.username}"
+            qr = qrcode.make(qr_data)
+            qr_io = io.BytesIO()
+            qr.save(qr_io, format='PNG')
+            qr_io.seek(0)
 
-            return Response({"message": "Booking successful!"}, status=status.HTTP_201_CREATED)
+            # Convert BytesIO to an Image object and save as a temporary file
+            qr_image = Image.open(qr_io)
+            qr_image_path = "/tmp/temp_qr.png"
+            qr_image.save(qr_image_path)
+
+            # Generate PDF ticket
+            pdf_io = io.BytesIO()
+            p = canvas.Canvas(pdf_io)
+            p.drawString(100, 800, f"Booking Confirmation for {event.title}")
+            p.drawString(100, 780, f"Name: {request.user.username}")
+            p.drawString(100, 760, f"Email: {request.user.email}")
+            p.drawString(100, 740, f"Event Date: {event.date_time}")
+            p.drawString(100, 720, f"Location: {event.location}")
+
+            # Add QR code image to the PDF using its file path
+            p.drawImage(qr_image_path, 100, 600, width=150, height=150)
+
+            p.showPage()
+            p.save()
+            pdf_io.seek(0)
+
+            # Send email with PDF attachment
+            email = EmailMessage(
+                subject=f"Booking Confirmed: {event.title}",
+                body=f"Dear {request.user.username},\n\nYour booking for {event.title} has been confirmed.\nPlease find your ticket attached.",
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[request.user.email]
+            )
+            email.attach(f"Booking_{booking.id}.pdf", pdf_io.getvalue(), "application/pdf")
+            email.send()
+
+            return Response({"message": "Booking successful! Confirmation email sent."}, status=status.HTTP_201_CREATED)
         else:
             return Response({"error": "Event is fully booked."}, status=status.HTTP_400_BAD_REQUEST)
-
-
+        
 class CancelBookingView(generics.DestroyAPIView):
     """Authenticated users can cancel their booking."""
     permission_classes = [permissions.IsAuthenticated]

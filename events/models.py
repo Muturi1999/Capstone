@@ -9,7 +9,22 @@ class Event(models.Model):
         ('monthly', 'Monthly'),
     ]
 
-    category = models.CharField(max_length=100, null=True, blank=True)
+    CATEGORY_CHOICES = [
+        ('tech', 'Technology'),
+        ('ai', 'Artificial Intelligence'),
+        ('economics', 'Economics'),
+        ('finance', 'Finance'),
+        ('business', 'Business'),
+        ('startup', 'Startups & Entrepreneurship'),
+        ('cybersecurity', 'Cybersecurity'),
+        ('data_science', 'Data Science'),
+        ('blockchain', 'Blockchain'),
+        ('cloud', 'Cloud Computing'),
+        ('machine_learning', 'Machine Learning'),
+        ('software_dev', 'Software Development'),
+    ]
+    
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='tech')
     title = models.CharField(max_length=255)
     description = models.TextField()
     date_time = models.DateTimeField()
