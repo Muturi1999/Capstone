@@ -1,137 +1,163 @@
 # Event Management API
 
+A full-featured Event Management API built with Django and Django REST Framework (DRF). This project allows users to manage events, register, book seats, join waitlists, and more — with secure JWT authentication and a fully interactive Swagger UI for API testing.
+
 ## Project Overview
-The Event Management API is a scalable and secure RESTful API built with Django REST Framework (DRF) and PostgreSQL. It allows users to create, manage, and book events, implementing role-based access control (RBAC), JWT authentication, event notifications, filtering, pagination, and recurring events.
 
-## Features
-- **User Authentication & Management**
-  - JWT-based authentication
-  - User registration, login, and email confirmation
-  - User profile management
-  - Role-based access control (Admin, Organizer, Attendee)
+This backend project simulates a real-world event management platform. It provides:
 
-- **Event Management**
-  - Create, update, delete events (Admin/Organizer only)
-  - List all events with pagination & filtering
-  - View event details
-  - Recurring events (weekly/monthly)
+- User management with roles (Admin, Organizer, Attendee)
+- Event CRUD operations
+- Booking & waitlist system
+- Feedback and calendar sync
+- JWT-based authentication
+- Swagger documentation
 
-- **Event Booking & RSVP**
-  - Book an event
-  - Cancel bookings
-  - View booked events
-  - Waitlist for fully booked events
+---
 
-- **Search & Filtering**
-  - Search by title, location, date range
-  - Pagination for large datasets
+ <!-- Live API Documentation -->
 
-- **Notifications & Feedback**
-  - Email notifications for upcoming events
-  - User feedback for past events
+<!-- Base URL:   -->
+http://127.0.0.1:8000/api/
 
-- **Calendar Integration**
-  - Add events to Google Calendar
+<!-- Swagger UI:  -->
+http://127.0.0.1:8000/swagger/?format=openapi
 
-- **API Documentation**
-  - Swagger UI for interactive testing
 
-## Technologies Used
-- **Backend:** Django, Django REST Framework (DRF)
-- **Database:** PostgreSQL
-- **Authentication:** JWT (Django Simple JWT)
-- **Email Service:** SMTP (Configured via .env)
-- **Documentation:** Swagger UI
-- **Environment Management:** Python-dotenv
+Explore all API endpoints and test them in-browser!
 
-## Installation & Setup
 
-### 1. Clone the Repository
-```bash
-git clone https://github.com/yourusername/event-management-api.git
+ <!-- Technology Stack -->
+
+- Python 3.x
+- Django
+- Django REST Framework (DRF)
+- Simple JWT
+- drf-yasg (Swagger)
+- PostgreSQL
+
+ <!-- Project Structure -->
+
+event_management/
+├── events/                   
+├── users/                    
+├── templates/                
+├── celery/                   
+├── event_management_api/     
+│   ├── settings.py
+│   ├── urls.py
+│   ├── asgi.py
+│   └── wsgi.py
+├── .env                    
+├── manage.py              
+├── pytest.ini                
+├── requirements.txt       
+├── README.md
+└── venv/                     
+
+
+<!-- !-- Setup Instructions --> -->
+
+<!-- 1. Clone the Repository -->
+
+git clone https://github.com/muturi1999/event-management-api.git
+
 cd event-management-api
-```
 
-### 2. Create and Activate a Virtual Environment
-```bash
-python3 -m venv venv
-source venv/bin/activate 
-```
+<!-- 2. Create a Virtual Environment -->
 
-### 3. Install Dependencies
-```bash
+python -m venv env
+source env/bin/activate  # On Windows: env\Scripts\activate
+
+<!-- 3. Install Dependencies -->
 pip install -r requirements.txt
-```
 
-### 4. Set Up Environment Variables
-Create a `.env` file in the root directory and configure the following:
-```env
-SECRET_KEY=your_secret_key
-DEBUG=True
-DATABASE_URL=postgresql://organizer:Mike_12#$@localhost:5432/eventmanagementapi
-EMAIL_HOST=smtp.yourmail.com
-EMAIL_PORT=587
-EMAIL_HOST_USER=your-email@example.com
-EMAIL_HOST_PASSWORD=your-email-password
-EMAIL_USE_TLS=True
-```
+ <!-- 4. Create and confidure database i.e mysql, postgres -->
+ update data base configuration on env enviroment variables
 
-### 5. Apply Database Migrations
-```bash
-python manage.py makemigrations
-python manage.py migrate
-```
+<!-- 5. Set up email configuration  -->
+configure email 
 
-### 6. Create a Superuser
-```bash
-python manage.py createsuperuser
-```
+<!-- 6. Apply Migrations -->
+python3 manage.py makemigrations
+python3 manage.py migrate
 
-### 7. Run the Development Server
-```bash
-python manage.py runserver
-```
+<!-- 7. Running Tests -->
+python3 manage.py test
 
-## API Endpoints
+<!-- 8. Access the API Docs -->
+http://127.0.0.1:8000/swagger/?format=openapi
 
-### 1. User Authentication & Management
-| Endpoint | Method | Access |
-|----------|--------|--------|
-| /api/register/ | POST | Public |
-| /api/token/ | POST | Public |
-| /api/token/refresh/ | POST | Public |
-| /api/confirm-email/?token=<token> | GET | Public |
-| /api/user/profile/ | GET/PUT | Authenticated Users |
 
-### 2. Event Management
-| Endpoint | Method | Access |
-|----------|--------|--------|
-| /api/events/ | POST | Admin Only |
-| /api/events/ | GET | Public |
-| /api/events/{id}/ | GET | Public |
-| /api/events/{id}/ | PUT | Organizer Only |
-| /api/events/{id}/ | DELETE | Organizer Only |
 
-### 3. Event Booking & RSVP
-| Endpoint | Method | Access |
-|----------|--------|--------|
-| /api/events/{id}/book/ | POST | Authenticated Users |
-| /api/events/{id}/cancel-booking/ | DELETE | Authenticated Users |
-| /api/user/booked-events/ | GET | Authenticated Users |
+<!-- list of api and endpoints -->
+<!-- Authentication & User Management -->
 
-### 4. Admin & Role-Based Access
-| Endpoint | Method | Access |
-|----------|--------|--------|
-| /api/user/{id}/assign-role/ | PATCH | Admin Only |
+- Register a new user 
+  `POST /users/api/register/`
 
-### 5. Event Filtering & Search
-| Endpoint | Method | Access |
-|----------|--------|--------|
-| /api/events/?title=<>&location=<>&date_from=<>&date_to=<> | GET | Public |
-| /api/events/upcoming/ | GET | Public |
+- Log in and obtain JWT access and refresh tokens 
+  `POST /users/api/login/`
 
-## Testing the API
-Run tests to verify functionality:
-```bash
-python manage.py test
-```
+- Log out the currently authenticated user 
+  `POST /users/api/logout/`
+
+- Obtain a new JWT token pair  
+  `POST /users/api/token/`
+
+- Refresh your access token using a valid refresh token  
+  `POST /users/api/token/refresh/`
+
+- Request a password reset email 
+  `POST /users/api/request-password-reset/`
+
+- Reset password using a secure token and user ID 
+  `POST /users/api/reset-password/{uid}/{token}/`
+
+- Assign a role to a user (Admin, Organizer) 
+  `POST /users/api/user/{id}/assign-role/`
+
+- Verify email using a token   
+  `GET /users/api/verify-email/`
+
+
+ <!-- Event Management -->
+
+- List all events  
+  `GET /events/`
+
+- Create a new event (Organizer only)  
+  `POST /events/`
+
+- **List only upcoming events  
+  `GET /events/list/`
+
+- Retrieve a specific event by ID 
+  `GET /events/{id}/`
+
+- Update an existing event (Organizer only)  
+  `PUT /events/{id}/`
+
+- Delete an event (Organizer only)
+  `DELETE /events/{id}/`
+
+ <!-- Bookings & Waitlists -->
+
+- Book an event
+  `POST /events/{event_id}/book/`
+
+-Cancel your existing booking for an event  
+  `DELETE /events/{event_id}/cancel-booking/`
+
+- Join the waitlist if the event is full  
+  `POST /events/{event_id}/join-waitlist/`
+
+
+
+<!-- Feedback & Calendar Sync -->
+
+- Leave feedback for a specific event
+  `POST /events/{event_id}/feedback/`
+
+- Sync the event with an external calendar 
+  `POST /events/{event_id}/sync/`
