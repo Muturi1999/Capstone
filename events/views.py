@@ -126,6 +126,14 @@ class CancelBookingView(generics.DestroyAPIView):
         if booking:
             booking.delete()
 
+            # Send cancellation email to the user
+            send_mail(
+                subject=f"Booking Cancelled: {Event.title}",
+                message=f"Dear {request.user.username},\n\nYour booking for {Event.title} has been successfully cancelled.",
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[request.user.email],
+            )
+
             # Notifying first user in the waiting list
             first_waitlisted = Waitlist.objects.filter(event_id=kwargs['event_id']).order_by('joined_at').first()
             if first_waitlisted:

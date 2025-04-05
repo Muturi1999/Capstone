@@ -46,25 +46,8 @@ class RegisterSerializer(serializers.ModelSerializer):
             username=validated_data['username'],
             email=validated_data['email'],
             password=validated_data['password'],
-            # is_active=False,  # Prevent login until verification
-            # is_verified=False  # Explicit verification flag
         )
-        
-        # Generate email verification token
-        # uid, token = generate_verification_token(user)
-        
-        # Build verification URL using settings
-        # verification_url = f"{settings.FRONTEND_URL}/verify-email/{uid}/{token}/"
-        
-        # Send verification email
-        # send_mail(
-        #     "Verify Your Email",
-        #     f"Click the link to verify your email: {verification_url}",
-        #     settings.DEFAULT_FROM_EMAIL,
-        #     [user.email],
-        #     fail_silently=False,
-        # )
-        
+             
         return user
 class EmailVerificationSerializer(serializers.ModelSerializer):
     token = serializers.CharField(max_length= 555)

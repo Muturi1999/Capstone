@@ -10,18 +10,18 @@ class Event(models.Model):
     ]
 
     CATEGORY_CHOICES = [
-        ('tech', 'Technology'),
-        ('ai', 'Artificial Intelligence'),
-        ('economics', 'Economics'),
+        ('Technology', 'Technology'),
+        ('AI', 'Artificial Intelligence'),
+        ('Economics', 'Economics'),
         ('finance', 'Finance'),
-        ('business', 'Business'),
-        ('startup', 'Startups & Entrepreneurship'),
-        ('cybersecurity', 'Cybersecurity'),
-        ('data_science', 'Data Science'),
-        ('blockchain', 'Blockchain'),
-        ('cloud', 'Cloud Computing'),
+        ('Business', 'Business'),
+        ('Startup', 'Startups & Entrepreneurship'),
+        ('Cybersecurity', 'Cybersecurity'),
+        ('Data_science', 'Data Science'),
+        ('Blockchain', 'Blockchain'),
+        ('Cloud', 'Cloud Computing'),
         ('machine_learning', 'Machine Learning'),
-        ('software_dev', 'Software Development'),
+        ('Software_dev', 'Software Development'),
     ]
     
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='tech')

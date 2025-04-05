@@ -27,13 +27,9 @@ urlpatterns = [
     path('api/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', CustomTokenRefreshView.as_view(), name='token_refresh'),
     
-    # Email verification - keep consistent without 'api/' prefix for frontend navigation
-    # path('verify-email/<str:uid>/<str:token>/', VerifyEmailView.as_view(), name='verify-email'),
-    # path('verify-email/<str:uid>/<str:token>/', VerifyEmailView.as_view(), name='verify_email'),
-    # path('verify-email/<str:uid>/', VerifyEmailView.as_view(), name='verify_email'),
+    # Email verification 
     path('api/verify-email/', VerifyEmailView.as_view(), name='confirm_email'),
 
-    
     # Admin to assign roles
     path('api/user/<int:pk>/assign-role/', AssignRoleView.as_view(), name='assign-role'),
     

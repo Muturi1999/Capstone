@@ -12,7 +12,7 @@ def create_recurring_events(sender, instance, created, **kwargs):
         future_dates = []
         base_date = instance.date_time
 
-        for i in range(1, 5):  # Generate next 4 occurrences
+        for i in range(1, 5):  
             if instance.recurring == 'weekly':
                 future_dates.append(base_date + timedelta(weeks=i))
             elif instance.recurring == 'monthly':
