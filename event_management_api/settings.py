@@ -17,7 +17,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'default-secret-key')
 FRONTEND_URL = 'http://127.0.0.1:8000' 
 
 
-DEBUG = True
+DEBUG = False
 
 # ALLOWED_HOSTS = [] 
 # ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'mikemuturi.pythonanywhere.com']
@@ -28,9 +28,9 @@ ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 SECURE_BROWSER_XSS_FILTER = True
 X_FRAME_OPTIONS = 'DENY'
 SECURE_CONTENT_TYPE_NOSNIFF = True
-SECURE_SSL_REDIRECT = False 
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_SECURE = False
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 
 
 
